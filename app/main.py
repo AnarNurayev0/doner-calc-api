@@ -8,13 +8,13 @@ tags_metadata = [
         "description": "Public endpoints to calculate how many doners a given budget can buy.."
     },
     {
+        "name": "Admin Endpoints",
+        "description": "Admin Endpoints"
+    },
+    {
         "name": "Root",
         "description": "Root"
     },
-    {
-        "name": "Admin Endpoints",
-        "description": "Admin Endpoints"
-    }
 ]
 
 app = FastAPI(openapi_tags=tags_metadata)
