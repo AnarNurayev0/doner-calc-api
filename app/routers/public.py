@@ -30,18 +30,18 @@ def doner_count(doner_name: str, meat_type: str, from_currency: str, amount: flo
     if not data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Doner is not found!") 
 
-    change_money = round(currency.currency_conventer("AZN", change, from_currency), 0)
+    change_money = round(currency.currency_conventer("AZN", change, from_currency), 1)
 
     return {"doners": doner_amount, f"change({from_currency})": change_money}
 
 # --- DONER OPTIONS ---
 @router.get("/options", status_code=status.HTTP_200_OK)
-def doner_options(db: DatabaseDep) -> dict[str, list[str]]:
-    rows = db.query(models.Doners.doner_name, models.Doners.meat_type).all()
+def doner_options(db: DatabaseDep) -> dict[str, list[dict]]:
+    rows = db.query(models.Doners.doner_name, models.Doners.meat_type, models.Doners.price).all()
 
-    result: dict[str, list[str]] = {}
-    for name, meat in rows:
-        result.setdefault(name, []).append(meat)
+    result: dict[str, list[dict]] = {}
+    for name, meat, price in rows:
+        result.setdefault(name, []).append({"meat_type": meat, "price": price})
 
     return result
 

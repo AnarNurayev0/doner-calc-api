@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Doner Calc</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;900&display=swap" rel="stylesheet">
@@ -182,7 +184,7 @@ function fill_meat() {
   const meats = options[doner_select.value] || [];
   meat_select.innerHTML = "";
   for (const meat of meats) {
-    meat_select.innerHTML += `<option value="${meat}">${meat}</option>`;
+    meat_select.innerHTML += `<option value="${meat.meat_type}">${meat.meat_type} - ${meat.price} AZN</option>`;
   }
 }
 
