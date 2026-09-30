@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, HTTPException
 from ..services import currency, calculator
 from ..database import DatabaseDep
+from ..exceptions import TheError
 from app import models
 
 
@@ -45,3 +46,10 @@ def doner_options(db: DatabaseDep) -> dict[str, list[dict]]:
 
     return result
 
+# --- CURRENCIES ---
+@router.get("/currencies", status_code=status.HTTP_200_OK)
+def doner_currencies() -> list[dict]:
+    try:
+        return currency.get_currencies()
+    except TheError:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Currency API unavailable")

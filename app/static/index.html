@@ -51,7 +51,7 @@
 
   .row { display: flex; gap: 12px; }
   .row div { flex: 1; min-width: 0; }
-  .row div:last-child { flex: 0 0 110px; }
+  .row div:last-child { flex: 0 0 170px; }
 
   button {
     width: 100%;
@@ -127,11 +127,35 @@
     </div>
     <div>
       <label for="currency">Valyuta</label>
-      <input id="currency" list="currencies" value="USD" maxlength="3" style="text-transform: uppercase">
-      <datalist id="currencies">
-        <option value="USD"><option value="EUR"><option value="AZN"><option value="TRY">
-        <option value="GBP"><option value="RUB"><option value="GEL"><option value="JPY">
-      </datalist>
+      <select id="currency">
+        <option value="USD" selected>USD - Dollar</option>
+        <option value="EUR">EUR - Avro</option>
+        <option value="AZN">AZN - Manat</option>
+        <option value="TRY">TRY - Lirə</option>
+        <option value="GBP">GBP - Funt</option>
+        <option value="RUB">RUB - Rubl</option>
+        <option value="GEL">GEL - Lari</option>
+        <option value="JPY">JPY - Yen</option>
+        <option value="CNY">CNY - Yuan</option>
+        <option value="CHF">CHF - Frank</option>
+        <option value="CAD">CAD - Kanada dolları</option>
+        <option value="AUD">AUD - Avstraliya dolları</option>
+        <option value="KZT">KZT - Tenge</option>
+        <option value="UZS">UZS - Som</option>
+        <option value="AMD">AMD - Dram</option>
+        <option value="UAH">UAH - Qrivna</option>
+        <option value="AED">AED - Dirhəm</option>
+        <option value="SAR">SAR - Riyal</option>
+        <option value="ILS">ILS - Şekel</option>
+        <option value="INR">INR - Rupi</option>
+        <option value="PLN">PLN - Zloti</option>
+        <option value="CZK">CZK - Krona</option>
+        <option value="SEK">SEK - İsveç kronu</option>
+        <option value="NOK">NOK - Norveç kronu</option>
+        <option value="DKK">DKK - Danimarka kronu</option>
+        <option value="BRL">BRL - Real</option>
+        <option value="KRW">KRW - Von</option>
+      </select>
     </div>
   </div>
 
@@ -180,6 +204,23 @@ async function load_options() {
   }
 }
 
+async function load_currencies() {
+  const previous = currency_input.value || "USD";
+  try {
+    const res = await fetch("/doner/currencies");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const list = await res.json();
+    if (!Array.isArray(list) || list.length === 0) throw new Error("Empty list");
+
+    currency_input.innerHTML = list
+      .map((c) => `<option value="${c.code}">${c.code} - ${c.name}</option>`)
+      .join("");
+    currency_input.value = list.some((c) => c.code === previous) ? previous : "USD";
+  } catch (e) {
+    console.error("Valyutalar yüklənmədi, ehtiyat siyahı istifadə olunur", e);
+  }
+}
+
 function fill_meat() {
   const meats = options[doner_select.value] || [];
   meat_select.innerHTML = "";
@@ -197,7 +238,7 @@ async function calculate() {
   error_box.style.display = "none";
   receipt.classList.remove("show");
 
-  const currency = currency_input.value.trim().toUpperCase();
+  const currency = currency_input.value;
   const amount = amount_input.value;
 
   const params = new URLSearchParams({
@@ -234,9 +275,9 @@ async function calculate() {
 doner_select.addEventListener("change", fill_meat);
 btn.addEventListener("click", calculate);
 amount_input.addEventListener("keydown", (e) => { if (e.key === "Enter") calculate(); });
-currency_input.addEventListener("keydown", (e) => { if (e.key === "Enter") calculate(); });
 
 load_options();
+load_currencies();
 </script>
 </body>
 </html>
