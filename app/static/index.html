@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doner Calc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --tile: #12403F;
+    --tile-deep: #0A2A29;
+    --paper: #FBFAF6;
+    --sign: #FFC72C;
+    --ink: #1B1B1B;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+    background: var(--tile);
+    color: var(--paper);
+    font: 400 16px/1.5 "Rubik", system-ui, sans-serif;
+  }
+
+  main { max-width: 440px; margin: 0 auto; }
+
+  h1 {
+    margin: 0 0 28px;
+    font: 900 clamp(30px, 8vw, 40px)/1.1 "Rubik", system-ui, sans-serif;
+  }
+
+  label { display: block; margin: 16px 0 6px; font-size: 14px; }
+
+  input, select {
+    width: 100%;
+    height: 48px;
+    padding: 0 12px;
+    font: inherit;
+    color: var(--ink);
+    background: var(--paper);
+    border: 2px solid var(--tile-deep);
+    border-radius: 8px;
+  }
+
+  .row { display: flex; gap: 12px; }
+  .row div { flex: 1; min-width: 0; }
+  .row div:last-child { flex: 0 0 110px; }
+
+  button {
+    width: 100%;
+    height: 52px;
+    margin-top: 24px;
+    font: 600 17px "Rubik", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--sign);
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--tile-deep);
+  }
+  button:active { transform: translateY(4px); box-shadow: none; }
+  button:disabled { opacity: 0.6; cursor: default; }
+
+  :focus-visible { outline: 3px solid var(--sign); outline-offset: 2px; }
+
+  #error { display: none; margin-top: 16px; color: #FFB4AC; }
+
+  .receipt {
+    display: none;
+    position: relative;
+    margin-top: 36px;
+    padding: 24px 22px 20px;
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 4px 4px 0 0;
+  }
+  .receipt::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -8px;
+    height: 8px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='8' viewBox='0 0 16 8'%3E%3Cpath d='M0 0h16L8 8z' fill='%23FBFAF6'/%3E%3C/svg%3E") repeat-x;
+  }
+  .receipt.show { display: block; animation: print 0.5s ease-out; }
+
+  @keyframes print {
+    from { clip-path: inset(0 0 100% 0); transform: translateY(-16px); }
+    to { clip-path: inset(0 0 -20px 0); transform: none; }
+  }
+
+  .big { margin: 4px 0 14px; font: 900 64px/1 "Rubik", system-ui, sans-serif; }
+  .big small { margin-left: 8px; font: 600 18px "Rubik", system-ui, sans-serif; }
+
+  .line {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 2px dotted #c9c4b5;
+  }
+  .line:last-child { border-bottom: 0; }
+  .line span:first-child { color: #5d574a; }
+  .line span:last-child { font-weight: 600; text-align: right; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .receipt.show { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pulun neçə dönərə çatır?</h1>
+
+  <div class="row">
+    <div>
+      <label for="amount">Məbləğ</label>
+      <input id="amount" type="number" min="0" step="any" value="100" inputmode="decimal">
+    </div>
+    <div>
+      <label for="currency">Valyuta</label>
+      <input id="currency" list="currencies" value="USD" maxlength="3" style="text-transform: uppercase">
+      <datalist id="currencies">
+        <option value="USD"><option value="EUR"><option value="AZN"><option value="TRY">
+        <option value="GBP"><option value="RUB"><option value="GEL"><option value="JPY">
+      </datalist>
+    </div>
+  </div>
+
+  <label for="doner">Dönər</label>
+  <select id="doner"><option>Yüklənir...</option></select>
+
+  <label for="meat">Ət növü</label>
+  <select id="meat"></select>
+
+  <button id="btn">Hesabla</button>
+  <div id="error" role="alert"></div>
+
+  <section class="receipt" id="receipt" aria-live="polite">
+    <div class="big"><span id="count">0</span><small>dönər</small></div>
+    <div class="line"><span>Seçim</span><span id="pick"></span></div>
+    <div class="line"><span>Məbləğ</span><span id="paid"></span></div>
+    <div class="line"><span>Qalıq</span><span id="change"></span></div>
+  </section>
+</main>
+
+<script>
+const amount_input = document.getElementById("amount");
+const currency_input = document.getElementById("currency");
+const doner_select = document.getElementById("doner");
+const meat_select = document.getElementById("meat");
+const btn = document.getElementById("btn");
+const error_box = document.getElementById("error");
+const receipt = document.getElementById("receipt");
+
+let options = {};
+
+async function load_options() {
+  try {
+    const res = await fetch("/doner/options");
+    if (!res.ok) throw new Error();
+    options = await res.json();
+
+    doner_select.innerHTML = "";
+    for (const name in options) {
+      doner_select.innerHTML += `<option value="${name}">${name}</option>`;
+    }
+    fill_meat();
+  } catch (e) {
+    doner_select.innerHTML = "<option>Siyahı yüklənmədi</option>";
+    show_error("Dönər siyahısı yüklənmədi. Serverin işlədiyini yoxla və səhifəni yenilə.");
+  }
+}
+
+function fill_meat() {
+  const meats = options[doner_select.value] || [];
+  meat_select.innerHTML = "";
+  for (const meat of meats) {
+    meat_select.innerHTML += `<option value="${meat}">${meat}</option>`;
+  }
+}
+
+function show_error(text) {
+  error_box.textContent = text;
+  error_box.style.display = "block";
+}
+
+async function calculate() {
+  error_box.style.display = "none";
+  receipt.classList.remove("show");
+
+  const currency = currency_input.value.trim().toUpperCase();
+  const amount = amount_input.value;
+
+  const params = new URLSearchParams({
+    doner_name: doner_select.value,
+    meat_type: meat_select.value,
+    from_currency: currency,
+    amount: amount,
+  });
+
+  btn.disabled = true;
+  try {
+    const res = await fetch("/doner?" + params);
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg = typeof data.detail === "string" ? data.detail : "Xəta baş verdi. Məlumatları yoxla və yenidən hesabla.";
+      throw new Error(msg);
+    }
+
+    const change_key = Object.keys(data).find((k) => k.startsWith("change"));
+
+    document.getElementById("count").textContent = data.doners;
+    document.getElementById("pick").textContent = doner_select.value + " (" + meat_select.value + ")";
+    document.getElementById("paid").textContent = amount + " " + currency;
+    document.getElementById("change").textContent = data[change_key] + " " + currency;
+    receipt.classList.add("show");
+  } catch (e) {
+    show_error(e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+doner_select.addEventListener("change", fill_meat);
+btn.addEventListener("click", calculate);
+amount_input.addEventListener("keydown", (e) => { if (e.key === "Enter") calculate(); });
+currency_input.addEventListener("keydown", (e) => { if (e.key === "Enter") calculate(); });
+
+load_options();
+</script>
+</body>
+</html>

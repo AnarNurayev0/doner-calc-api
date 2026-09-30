@@ -1,6 +1,8 @@
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, status
 from .routers import public, admin
-
+from pathlib import Path
 
 tags_metadata = [
     {
@@ -23,7 +25,16 @@ app.include_router(public.router)
 app.include_router(admin.router)
 
 
-@app.get("/",status_code=status.HTTP_200_OK,tags=["Root"])
-async def root():
+STATIC_DIR = Path(__file__).parent / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/health",status_code=status.HTTP_200_OK,tags=["Health"])
+async def health():
     
-    return {"message": "This is the root url!"}
+    return {"heatlh": "OK!"}
