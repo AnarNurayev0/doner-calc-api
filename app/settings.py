@@ -11,5 +11,6 @@ class Settings(BaseSettings):
     database_hostname: str
     admin_username: str
     admin_password: str
+    redis_url: str
 
 settings = Settings()
